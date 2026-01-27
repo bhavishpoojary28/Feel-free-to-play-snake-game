@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AR Game</title>
+    <link rel="icon" type="image/x-icon" href="tushar.jpg">
+    <link rel="shortcut icon" href="tushar.jpg">
+    <style>
+        /* Realistic graphics CSS */
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #2d5016 0%, #4a7c59 50%, #2d5016 100%);
+            background-image: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 200, 120, 0.2) 0%, transparent 50%);
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #ffffff;
+            min-height: 100vh;
+        }
+
+        .game-container {
+            background: linear-gradient(145deg, #3a5f3a, #2d4a2d);
+            padding: 25px;
+            border: 3px solid #1a3d1a;
+            border-radius: 15px;
+            box-shadow: 
+                0 10px 30px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .logo-container {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            object-fit: cover;
+            display: inline-block;
+        }
+
+        h1 {
+            text-align: center;
+            margin: 0 0 15px 0;
+            font-size: 28px;
+            font-weight: bold;
+            background: linear-gradient(45deg, #90EE90, #32CD32, #228B22);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            filter: drop-shadow(0 0 10px rgba(144, 238, 144, 0.3));
+        }
+
+        .score-display {
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            background: linear-gradient(145deg, #1a3d1a, #0d2d0d);
+            color: #90EE90;
+            padding: 12px 20px;
+            border-radius: 10px;
+            border: 2px solid #2d5d2d;
+            box-shadow: 
+                0 4px 15px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            text-shadow: 0 0 10px rgba(144, 238, 144, 0.5);
+        }
+
+        #gameCanvas {
+            background: linear-gradient(45deg, #2d5016 0%, #4a7c59 50%, #2d5016 100%);
+            border: 4px solid #1a3d1a;
+            border-radius: 8px;
+            display: block;
+            margin: 0 auto;
+            box-shadow: 
+                0 8px 25px rgba(0, 0, 0, 0.4),
+                inset 0 0 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .controls {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 14px;
+            color: #306230;
+        }
+
+        .game-over {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #306230;
+            color: #9bbc0f;
+            padding: 30px;
+            border: 3px solid #1e2124;
+            border-radius: 10px;
+            text-align: center;
+            display: none;
+            z-index: 1000;
+            font-family: 'Courier New', monospace;
+        }
+
+        .game-over h2 {
+            margin: 0 0 15px 0;
+            font-size: 20px;
+        }
+
+        .restart-btn {
+            background-color: #9bbc0f;
+            color: #306230;
+            border: 2px solid #1e2124;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+
+        .restart-btn:hover {
+            background-color: #8bac0f;
+        }
+
+        .restart-btn:active {
+            background-color: #7ba00f;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="logo-container">
+         
+        </div>
+        <h1>SNAKE GAME</h1>
+        
+        <div class="score-display">
+            Score: <span id="score">0</span>
+        </div>
+        
+        <canvas id="gameCanvas" width="400" height="400"></canvas>
+        
+        <div class="controls">
+            Use Arrow Keys to Control Snake<br>
+            Press 1-9 for Speed: 1=Very Slow, 2=Slow, 3=Normal, 4=Fast, 5=Very Fast, 6=Ultra Fast, 7=Lightning, 8=Extreme, 9=Insane<br>
+            Press W to Toggle Wall Wrapping (Go Through Walls)<br>
+            Press Enter to Restart Game (when game over)
+        </div>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div class="game-over" id="gameOverScreen">
+        <h2>GAME OVER</h2>
+        <p>Final Score: <span id="finalScore">0</span></p>
+        <button class="restart-btn" onclick="restartGame()">chal nikal</button>
+    </div>
+
+    <script>
+        // Game canvas and context
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+        const gameOverScreen = document.getElementById('gameOverScreen');
+        const finalScoreElement = document.getElementById('finalScore');
+
+        // Game configuration - smooth movement without grid
+        const SNAKE_SIZE = 20; // Size of snake segments
+        const MOVE_SPEED = 3; // Pixels per frame movement
+
+        // Game state variables
+        let snake = [
+            { x: 200, y: 200 } // Starting position in pixels
+        ];
+        let direction = { x: 0, y: 0 }; // Snake starts stationary
+        let food = { x: 300, y: 150 }; // Food position in pixels
+        let score = 0;
+        let gameRunning = true;
+        let gameLoop;
+        let animationFrame = 0; // For movement animations
+        let moveOffset = { x: 0, y: 0 }; // Smooth movement offset
+        let gameSpeed = 150; // Game speed in milliseconds (lower = faster)
+        let wallWrapping = false; // Wall wrapping ability toggle
+        let targetSnakeLength = 1; // Track how long the snake should be
+
+        /**
+         * Initialize the game
+         */
+        function initGame() {
+            // Reset game state
+            snake = [{ x: 200, y: 200 }];
+            direction = { x: 0, y: 0 };
+            score = 0;
+            gameRunning = true;
+            targetSnakeLength = 1; // Reset target length
+            scoreElement.textContent = score;
+            
+            // Reset canvas border style
+            const canvas = document.getElementById('gameCanvas');
+            canvas.style.borderColor = '#1a3d1a';
+            canvas.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.4), inset 0 0 20px rgba(0, 0, 0, 0.2)';
+            
+            // Generate first food
+            generateFood();
+            
+            // Start game loop with requestAnimationFrame for smooth movement
+            gameLoop = setInterval(updateGame, 50); // Faster updates for smooth movement
+            
+            // Draw initial state
+            draw();
+        }
+
+        /**
+         * Main game update function with animation support
+         */
+        function updateGame() {
+            if (!gameRunning) return;
+
+            // Move snake only if direction is set
+            if (direction.x !== 0 || direction.y !== 0) {
+                moveSnake();
+                
+                // Check collisions
+                if (checkCollision()) {
+                    gameOver();
+                    return;
+                }
+                
+                // Check if snake ate food
+                const foodDistance = Math.sqrt(
+                    Math.pow(snake[0].x - food.x, 2) +
+                    Math.pow(snake[0].y - food.y, 2)
+                );
+                if (foodDistance < SNAKE_SIZE) {
+                    eatFood();
+                }
+            }
+            
+            // Always redraw for animations
+            draw();
+        }
+
+        /**
+         * Move the snake in the current direction
+         */
+        function moveSnake() {
+            let head = { 
+                x: snake[0].x + (direction.x * MOVE_SPEED), 
+                y: snake[0].y + (direction.y * MOVE_SPEED)
+            };
+            
+            // Handle wall wrapping if enabled
+            if (wallWrapping) {
+                // Wrap horizontally
+                if (head.x < 0) {
+                    head.x = canvas.width - SNAKE_SIZE;
+                } else if (head.x >= canvas.width) {
+                    head.x = 0;
+                }
+                
+                // Wrap vertically
+                if (head.y < 0) {
+                    head.y = canvas.height - SNAKE_SIZE;
+                } else if (head.y >= canvas.height) {
+                    head.y = 0;
+                }
+            }
+            
+            snake.unshift(head); // Add new head
+            
+            // Maintain snake length by removing tail segments that are too far
+            if (snake.length > targetSnakeLength) {
+                snake.pop();
+            }
+        }
+
+        /**
+         * Check for collisions with walls or self
+         */
+        function checkCollision() {
+            const head = snake[0];
+            
+            // Wall collision - wrap around instead of ending game
+            if (head.x < 0) {
+                head.x = canvas.width - SNAKE_SIZE;
+            } else if (head.x >= canvas.width - SNAKE_SIZE) {
+                head.x = 0;
+            }
+            
+            if (head.y < 0) {
+                head.y = canvas.height - SNAKE_SIZE;
+            } else if (head.y >= canvas.height - SNAKE_SIZE) {
+                head.y = 0;
+            }
+            
+            // Self collision (check if head hits any body segment)
+            // Only check if snake is long enough and skip more segments to prevent false positives
+            if (snake.length > 10) {
+                for (let i = 8; i < snake.length; i++) {
+                    const distance = Math.sqrt(
+                        Math.pow(head.x - snake[i].x, 2) +
+                        Math.pow(head.y - snake[i].y, 2)
+                    );
+                    if (distance < SNAKE_SIZE * 0.6) {
+                        return true;
+                    }
+                }
+            }
+            
+            return false;
+        }
+
+        /**
+         * Handle food consumption
+         */
+        function eatFood() {
+            // Increase score
+            score += 10;
+            scoreElement.textContent = score;
+            
+            // Grow snake by adding multiple segments - increased for longer growth
+            targetSnakeLength += 15;
+            
+            // Generate new food
+            generateFood();
+        }
+
+        /**
+         * Generate food at random position not occupied by snake
+         */
+        function generateFood() {
+            do {
+                food = {
+                    x: Math.random() * (canvas.width - SNAKE_SIZE * 2) + SNAKE_SIZE,
+                    y: Math.random() * (canvas.height - SNAKE_SIZE * 2) + SNAKE_SIZE
+                };
+            } while (isPositionOccupied(food.x, food.y));
+        }
+
+        /**
+         * Check if position is occupied by snake
+         */
+        function isPositionOccupied(x, y) {
+            return snake.some(segment => {
+                const distance = Math.sqrt(
+                    Math.pow(x - segment.x, 2) +
+                    Math.pow(y - segment.y, 2)
+                );
+                return distance < SNAKE_SIZE;
+            });
+        }
+
+        /**
+         * Draw the entire game with realistic graphics
+         */
+        function draw() {
+            // Clear canvas with gradient background
+            const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            gradient.addColorStop(0, '#2d5016');
+            gradient.addColorStop(0.5, '#4a7c59');
+            gradient.addColorStop(1, '#2d5016');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw grid pattern
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.lineWidth = 0.5;
+            const gridSize = 20;
+            
+            // Draw vertical lines
+            for (let x = 0; x <= canvas.width; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            
+            // Draw horizontal lines
+            for (let y = 0; y <= canvas.height; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+            
+            // Update animation frame for movement effects
+            animationFrame += 0.2;
+            
+            // Draw snake with enhanced rounded segments and smooth animations
+            snake.forEach((segment, index) => {
+                let x = segment.x;
+                let y = segment.y;
+                const size = SNAKE_SIZE;
+                const radius = size / 2;
+                
+                // Smooth movement animation for head without shaking
+                if (index === 0 && (direction.x !== 0 || direction.y !== 0)) {
+                    // Subtle smooth movement without wobble
+                    const smoothFactor = 0.1;
+                    x += Math.sin(animationFrame * 0.5) * smoothFactor;
+                    y += Math.cos(animationFrame * 0.5) * smoothFactor;
+                }
+                
+                // Gentle wave animation for body segments
+                if (index > 0) {
+                    const segmentDelay = index * 0.2;
+                    const waveIntensity = Math.max(0.1, 0.5 - (index * 0.02)); // Much gentler
+                    
+                    // Very subtle serpentine movement
+                    const lateralWave = Math.sin(animationFrame * 0.8 + segmentDelay) * waveIntensity;
+                    const verticalWave = Math.cos(animationFrame * 0.6 + segmentDelay) * (waveIntensity * 0.5);
+                    
+                    // Apply gentle movement
+                    if (direction.x !== 0) {
+                        y += lateralWave * 0.3;
+                    } else if (direction.y !== 0) {
+                        x += lateralWave * 0.3;
+                    } else {
+                        // Very gentle idle animation
+                        x += Math.sin(animationFrame * 0.3 + segmentDelay) * (waveIntensity * 0.2);
+                        y += Math.cos(animationFrame * 0.2 + segmentDelay) * (waveIntensity * 0.1);
+                    }
+                }
+                
+                // Enhanced shadow with stable offset
+                const shadowOffset = 3;
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+                ctx.beginPath();
+                ctx.arc(x + radius + shadowOffset, y + radius + shadowOffset, radius, 0, Math.PI * 2);
+                ctx.fill();
+                
+                if (index === 0) {
+                    // Snake head with new blue-purple color scheme
+                    const headGradient = ctx.createRadialGradient(
+                        x + radius, y + radius, 0,
+                        x + radius, y + radius, radius
+                    );
+                    
+                    // Blue-purple gradient for head
+                    headGradient.addColorStop(0, '#6a5acd'); // Slate blue
+                    headGradient.addColorStop(0.6, '#483d8b'); // Dark slate blue
+                    headGradient.addColorStop(0.8, '#2f2f4f'); // Dark slate gray
+                    headGradient.addColorStop(1, '#191970'); // Midnight blue
+                    
+                    // Draw rounded head without pulsing
+                    ctx.fillStyle = headGradient;
+                    ctx.beginPath();
+                    ctx.arc(x + radius + 1, y + radius + 1, radius, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Stable head shine effect
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                    ctx.beginPath();
+                    ctx.arc(x + radius * 0.6, y + radius * 0.6, radius * 0.4, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Stable eyes with gentle glow
+                    const eyeGlow = 0.9;
+                    
+                    // Left eye
+                    ctx.fillStyle = `rgba(255, 215, 0, ${eyeGlow})`; // Gold eyes
+                    ctx.beginPath();
+                    ctx.arc(x + radius * 0.6, y + radius * 0.5, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Left pupil - stable position
+                    ctx.fillStyle = '#000000';
+                    ctx.beginPath();
+                    ctx.arc(x + radius * 0.6, y + radius * 0.5, 1.5, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Right eye
+                    ctx.fillStyle = `rgba(255, 215, 0, ${eyeGlow})`;
+                    ctx.beginPath();
+                    ctx.arc(x + radius * 1.4, y + radius * 0.5, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Right pupil - stable position
+                    ctx.fillStyle = '#000000';
+                    ctx.beginPath();
+                    ctx.arc(x + radius * 1.4, y + radius * 0.5, 1.5, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Stable nostrils
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                    ctx.beginPath();
+                    ctx.arc(x + radius * 0.8, y + radius * 0.8, 1, 0, Math.PI * 2);
+                    ctx.arc(x + radius * 1.2, y + radius * 0.8, 1, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Gentle tongue animation
+                    const tongueAnimation = Math.sin(animationFrame * 1.5);
+                    if (tongueAnimation > 0.5) {
+                        const tongueLength = (tongueAnimation - 0.5) * 6;
+                        ctx.strokeStyle = '#ff6b6b';
+                        ctx.lineWidth = 2;
+                        ctx.lineCap = 'round';
+                        ctx.beginPath();
+                        
+                        // Main tongue
+                        ctx.moveTo(x + radius, y + radius * 1.2);
+                        ctx.lineTo(x + radius, y + radius * 1.2 + tongueLength);
+                        
+                        // Fork splits
+                        ctx.moveTo(x + radius, y + radius * 1.2 + tongueLength);
+                        ctx.lineTo(x + radius - 2, y + radius * 1.2 + tongueLength + 2);
+                        ctx.moveTo(x + radius, y + radius * 1.2 + tongueLength);
+                        ctx.lineTo(x + radius + 2, y + radius * 1.2 + tongueLength + 2);
+                        ctx.stroke();
+                    }
+                    
+                } else {
+                    // Body segments with new teal-green color scheme
+                    const bodyGradient = ctx.createRadialGradient(
+                        x + radius, y + radius, 0,
+                        x + radius, y + radius, radius
+                    );
+                    
+                    // Teal-green gradient for body
+                    const segmentBrightness = Math.max(30, 45 - (index * 0.8));
+                    bodyGradient.addColorStop(0, `#20b2aa`); // Light sea green
+                    bodyGradient.addColorStop(0.7, `#008b8b`); // Dark cyan
+                    bodyGradient.addColorStop(0.9, `#2f4f4f`); // Dark slate gray
+                    bodyGradient.addColorStop(1, `#1e3a3a`); // Very dark cyan
+                    
+                    // Draw body segment without breathing effect
+                    ctx.fillStyle = bodyGradient;
+                    ctx.beginPath();
+                    ctx.arc(x + radius + 1, y + radius + 1, radius, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Stable scale pattern
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+                    ctx.beginPath();
+                    ctx.arc(x + radius * 0.7, y + radius * 0.7, radius * 0.3, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Stable segment connections
+                    if (index < snake.length - 1) {
+                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+                        ctx.lineWidth = 1;
+                        ctx.lineCap = 'round';
+                        ctx.beginPath();
+                        ctx.moveTo(x + radius * 0.3, y + radius);
+                        ctx.lineTo(x + radius * 1.7, y + radius);
+                        ctx.stroke();
+                    }
+                }
+            });
+            
+            // Draw food as apple emoji with enhanced effects
+            const foodX = food.x;
+            const foodY = food.y;
+            const foodSize = SNAKE_SIZE;
+            
+            // Add pulsing glow effect around apple
+            const glowIntensity = Math.sin(animationFrame * 2) * 0.3 + 0.7;
+            const glowRadius = foodSize * 0.8;
+            
+            // Draw glow effect
+            const glowGradient = ctx.createRadialGradient(
+                foodX + foodSize/2, foodY + foodSize/2, 0,
+                foodX + foodSize/2, foodY + foodSize/2, glowRadius
+            );
+            glowGradient.addColorStop(0, `rgba(255, 100, 100, ${glowIntensity * 0.6})`);
+            glowGradient.addColorStop(0.5, `rgba(255, 150, 150, ${glowIntensity * 0.3})`);
+            glowGradient.addColorStop(1, 'rgba(255, 200, 200, 0)');
+            
+            ctx.fillStyle = glowGradient;
+            ctx.beginPath();
+            ctx.arc(foodX + foodSize/2, foodY + foodSize/2, glowRadius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Draw apple emoji with scaling animation
+            const scaleEffect = Math.sin(animationFrame * 1.5) * 0.1 + 1;
+            const scaledSize = foodSize * scaleEffect;
+            
+            ctx.font = `${scaledSize}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // Add shadow to apple
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+            ctx.fillText('🍎', foodX + foodSize/2 + 2, foodY + foodSize/2 + 2);
+            
+            // Draw main apple
+            ctx.fillStyle = '#ff4444';
+            ctx.fillText('🍎', foodX + foodSize/2, foodY + foodSize/2);
+            
+            // Add sparkle effects around apple
+            for (let i = 0; i < 3; i++) {
+                const sparkleAngle = animationFrame * 2 + (i * Math.PI * 2 / 3);
+                const sparkleDistance = foodSize * 0.7;
+                const sparkleX = foodX + foodSize/2 + Math.cos(sparkleAngle) * sparkleDistance;
+                const sparkleY = foodY + foodSize/2 + Math.sin(sparkleAngle) * sparkleDistance;
+                const sparkleAlpha = Math.sin(animationFrame * 3 + i) * 0.5 + 0.5;
+                
+                ctx.fillStyle = `rgba(255, 255, 100, ${sparkleAlpha})`;
+                ctx.beginPath();
+                ctx.arc(sparkleX, sparkleY, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        /**
+         * Handle game over
+         */
+        function gameOver() {
+            gameRunning = false;
+            clearInterval(gameLoop);
+            finalScoreElement.textContent = score;
+            gameOverScreen.style.display = 'block';
+        }
+
+        /**
+         * Restart the game
+         */
+        function restartGame() {
+            gameOverScreen.style.display = 'none';
+            clearInterval(gameLoop);
+            initGame();
+        }
+
+        /**
+         * Change game speed
+         */
+        function changeSpeed(newSpeed) {
+            gameSpeed = newSpeed;
+            if (gameRunning) {
+                clearInterval(gameLoop);
+                gameLoop = setInterval(updateGame, gameSpeed);
+            }
+        }
+
+        /**
+         * Toggle wall wrapping ability
+         */
+        function toggleWallWrapping() {
+            wallWrapping = !wallWrapping;
+            console.log('Wall wrapping toggled:', wallWrapping); // Debug log
+            
+            // Visual feedback - change canvas border
+            const canvas = document.getElementById('gameCanvas');
+            if (wallWrapping) {
+                canvas.style.borderColor = '#90EE90';
+                canvas.style.boxShadow = '0 0 20px rgba(144, 238, 144, 0.8)';
+                console.log('Wall wrapping ENABLED - border should be green');
+            } else {
+                canvas.style.borderColor = '#1a3d1a';
+                canvas.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.4), inset 0 0 20px rgba(0, 0, 0, 0.2)';
+                console.log('Wall wrapping DISABLED - border should be dark');
+            }
+        }
+
+        /**
+         * Handle keyboard input
+         */
+        document.addEventListener('keydown', (event) => {
+            console.log('Key pressed:', event.key, 'Game running:', gameRunning); // Debug all keys
+            
+            // Handle Enter key for restarting when game over
+            if (event.key === 'Enter' && !gameRunning) {
+                if (gameOverScreen.style.display === 'block') {
+                    console.log('Enter key pressed - restarting game');
+                    restartGame();
+                    event.preventDefault();
+                    return;
+                }
+            }
+            
+            // Handle W key first, regardless of game state
+            if (event.key === 'w' || event.key === 'W') {
+                console.log('W key detected, current wallWrapping:', wallWrapping);
+                toggleWallWrapping();
+                event.preventDefault();
+                return;
+            }
+            
+            if (!gameRunning) return;
+            
+            switch (event.key) {
+                case 'ArrowUp':
+                    // Prevent reverse direction
+                    if (direction.y !== 1) {
+                        direction = { x: 0, y: -1 };
+                    }
+                    break;
+                case 'ArrowDown':
+                    if (direction.y !== -1) {
+                        direction = { x: 0, y: 1 };
+                    }
+                    break;
+                case 'ArrowLeft':
+                    if (direction.x !== 1) {
+                        direction = { x: -1, y: 0 };
+                    }
+                    break;
+                case 'ArrowRight':
+                    if (direction.x !== -1) {
+                        direction = { x: 1, y: 0 };
+                    }
+                    break;
+                // Speed controls
+                case '1':
+                    changeSpeed(150); // Very Slow
+                    break;
+                case '2':
+                    changeSpeed(130); // Slow
+                    break;
+                case '3':
+                    changeSpeed(100); // Normal
+                    break;
+                case '4':
+                    changeSpeed(90); // Fast
+                    break;
+                case '5':
+                    changeSpeed(70); // Very Fast
+                    break;
+                case '6':
+                    changeSpeed(50); // Ultra Fast
+                    break;
+                case '7':
+                    changeSpeed(30); // Lightning
+                    break;
+                case '8':
+                    changeSpeed(20); // Extreme
+                    break;
+                case '9':
+                    changeSpeed(10); // Insane
+                    break;
+                // Wall wrapping is now handled above the switch statement
+            }
+            
+            // Prevent default behavior for game keys
+            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'W', 'Enter'].includes(event.key)) {
+                event.preventDefault();
+            }
+        });
+
+        // Start the game when page loads
+        window.addEventListener('load', () => {
+            initGame();
+        });
+    </script>
+</body>
+</html>
